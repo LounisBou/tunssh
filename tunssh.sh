@@ -14,6 +14,9 @@ function tunssh(){
 	#
 	######################################################################################
 	
+	# Verbose mode.
+	verbose_mode=0
+	
 	# SSH Host.
 	ssh_host=''
 
@@ -40,7 +43,7 @@ function tunssh(){
 	
 	# Si le script est appelé avec loption -h, le script devra afficher un message sur la sortie derreur indiquant la liste des arguments quil attend.
 	# getops ?
-	usage="usage: tunssh [-h ssh_host] [-u ssh_user] [-p ssh_port] [-rth remote_tunnel_host] [-rtp remote_tunnel_port] [-ltp local_tunnel_port] [-ka|--kill-all]"
+	usage="usage: tunssh [-h ssh_host] [-u ssh_user] [-p ssh_port] [-rth remote_tunnel_host] [-rtp remote_tunnel_port] [-ltp local_tunnel_port] [-v] [-ka|--kill-all]"
 	
 	# Pour chaque options listé 
 	while test ${#} -gt 0
@@ -52,43 +55,42 @@ function tunssh(){
 			-h)
 				shift
 				ssh_host=$1
-				echo "host = $ssh_host"
 			;;
 			# SSH User.
 			-u)
 				shift
 				ssh_user=$1
-				echo "user = $ssh_user"
 			;;
 			# SSH Port.
 			-p)
 				shift
 				ssh_port=$1
-				echo "port = $ssh_port"
 			;;
 			# Remote tunnel host.
 			-rth)
 				shift
 				remote_tunnel_host=$1
-				echo "remote tunnel host = $remote_tunnel_host"
 			;;
 			# Remote tunnel port.
 			-rtp)
 				shift
 				remote_tunnel_port=$1
-				echo "remote tunnel port = $remote_tunnel_port"
 			;;
 			# Local tunnel port.
 			-ltp)
 				shift
 				local_tunnel_port=$1
-				echo "local tunnel port = $local_tunnel_port"
 			;;
 			# Kill all ssh command.
 			-ka|--kill-all)
 				echo "KILL ALL"
 				pkill ssh
 				return -1
+			;;
+			# Verbose.
+			-v)
+				verbose_mode=1
+				echo "Mode verbose activé."
 			;;
 			#Usage.
 			*)   
@@ -178,6 +180,24 @@ function tunssh(){
 			local_tunnel_port='8080'
 		fi
 	fi
+	
+	######################################################################################
+	#
+	#           Affichage des valeurs
+	#
+	######################################################################################
+	
+	# Si verbose mode actif.
+	if [[ $verbose_mode == 1 ]]
+	then
+		# Affichage des valeurs de la commande SSH.
+		echo "SSH host = $ssh_host"
+		echo "SSH user = $ssh_user"
+		echo "SSH port = $ssh_port"
+		echo "Tunnel remote host = $remote_tunnel_host"
+		echo "Tunnel remote port = $remote_tunnel_port"
+		echo "Tunnel local port = $local_tunnel_port"
+	fi
 
 	
 	######################################################################################
@@ -190,7 +210,15 @@ function tunssh(){
 	# -f : Go in background mode after connexion.
 	# -N : No command to lauch in background mode.
 	sshtun="ssh -fN -L $local_tunnel_port:$remote_tunnel_host:$remote_tunnel_port $ssh_user@$ssh_host -p $ssh_port"
-		
+	
+	# Si verbose mode actif.
+	if [[ $verbose_mode == 1 ]]
+	then 
+		# Affichage de la commande SSH.
+		echo "Lancement de la commande SSH :"
+		echo $sshtun
+	fi
+	
 	# Initiation du tunnel SSH en mode background.
 	eval $sshtun
 	
